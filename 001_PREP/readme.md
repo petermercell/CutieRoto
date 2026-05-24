@@ -227,6 +227,7 @@ These 5 files are everything the Nuke plugin needs — they get embedded into th
 | `trace_fusion_transformer.py` | E4 → `fusion_transformer.pt` (traced) |
 | `cutie_mask_propagate.py`   | the oracle (ground-truth Cutie run) |
 | `memory_read_reference.py`  | fp32 memory-read spec (transcribed into the C++ core) |
+| `dump_memory_read_case.py`  | dumps a real frame's KV state + fp32 read → `memcase.pt` (the C++ memory-core test fixture, used in `002_CPP`) |
 | `trt_feature_store.py`      | injects E1/E2 engines into Cutie for validation |
 | `trt_mask_encoder_hook.py`  | injects E3 engine into Cutie for validation |
 | `trt_decoder_hook.py`       | injects E5 engine into Cutie for validation |
