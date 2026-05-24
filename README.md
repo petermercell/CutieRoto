@@ -68,7 +68,7 @@ own card in Stage 1 (it's quick, and the guide walks you through it).
 
 ## Get the plugin
 
-- **Build it yourself:** follow `000_CutieInstallGuide` → `001_PREP` → `002_CPP`. ~2h end to end.
+- **Build it yourself:** follow `000_CutieInstallGuide` → `001_PREP` → `002_CPP`. ~3/4h end to end.
 
 ---
 
