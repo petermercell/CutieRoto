@@ -46,10 +46,11 @@ install.
 
 | Stage | Folder | What it covers |
 |-------|--------|----------------|
+| **0. Environment** | [`000_CutieInstallGuide/`](000_CutieInstallGuide/) | The `cutie311` conda environment — the exact, verified Python setup (torch 2.7.1+cu128, the TensorRT tarball wheel, Cutie + deps) everything else builds on. |
 | **1. Model Prep** | [`001_PREP/`](001_PREP/) | Cutie weights → 4 TensorRT engines + 1 traced TorchScript module. Export, build, trace, validate against the Python oracle. |
 | **2. The C++ Plugin** | [`002_CPP/`](002_CPP/) | The TRT engine runner, the bit-exact C++ memory core, the stateful Nuke node (`inputAt` frame-pull, disk cache, post-process), and the static-TensorRT build. |
 
-Each folder has its own README walking through that stage.
+Each folder has its own README walking through that stage. Start at `000`.
 
 ---
 
@@ -67,7 +68,7 @@ own card in Stage 1 (it's quick, and the guide walks you through it).
 
 ## Get the plugin
 
-- **Build it yourself:** follow `001_PREP` then `002_CPP`. ~2h end to end.
+- **Build it yourself:** follow `000_CutieInstallGuide` → `001_PREP` → `002_CPP`. ~2h end to end.
 
 ---
 
