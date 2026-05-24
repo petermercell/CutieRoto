@@ -80,14 +80,14 @@ export LD_LIBRARY_PATH=/usr/local/cuda-12.8/lib64:/opt/TensorRT-10.9.0.34/lib:$L
 ## Step 0 — Get Cutie and its weights
 
 Clone Cutie and download its pretrained weights per its own instructions (MIT
-licensed). Put the prep scripts from this repo's `prep/` folder alongside Cutie so
-`from cutie...` imports resolve:
+licensed). Put the prep scripts from this repo's `001_PREP/` folder alongside Cutie
+so `from cutie...` imports resolve:
 
 ```bash
 git clone https://github.com/hkchengrex/Cutie
 cd Cutie
 # follow Cutie's README to fetch the default model weights
-# then copy this guide's prep/*.py scripts into this directory
+# then copy this guide's 001_PREP/*.py scripts into this directory
 ```
 
 A quick sanity check that the model loads:
@@ -208,11 +208,11 @@ fusion_transformer.pt        # E4 (libtorch)
 ```
 
 These 5 files are everything the Nuke plugin needs — they get embedded into the
-`.so` in the C++ build (Part 2). Keep them; the build's `objcopy` step bakes them in.
+`.so` in the C++ build (`002_CPP`). Keep them; the build's `objcopy` step bakes them in.
 
 ---
 
-## Files in `prep/`
+## Files in `001_PREP/`
 
 | Script | Does |
 |--------|------|
@@ -239,7 +239,7 @@ These 5 files are everything the Nuke plugin needs — they get embedded into th
 
 ---
 
-**Next: Part 2 — the C++ Nuke plugin** (the TRT engine runner, the C++ memory core,
-the stateful Nuke node, and the static-TensorRT build).
+**Next: `002_CPP` — the C++ Nuke plugin** (the TRT engine runner, the C++ memory
+core, the stateful Nuke node, and the static-TensorRT build).
 
 *Cutie © Ho Kei Cheng et al., MIT. CutieRoto port © Peter Mercell, 2026.*
