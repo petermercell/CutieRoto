@@ -1,0 +1,108 @@
+cmake_minimum_required(VERSION 3.18)
+project(cutie_linkage_smoke VERSION 0.1.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+# =============================================================================
+# This is the STEP-0 linkage de-risk binary (no Nuke, no plugin). It proves the
+# Nuke-17 libtorch 2.7.1 + TensorRT 10.9 + CUDA 12.8 coexist in one process.
+# Build choices here are deliberately the SAFE ones (shared TRT, RPATH to Nuke's
+# libtorch); we revisit static-vs-shared for the actual plugin afterwards.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Nuke 17.0 (we link its bundled libtorch; target Nuke 17.0+ for torch 2.7.1)
+# -----------------------------------------------------------------------------
+set(NUKE_ROOT "/opt/Nuke17.0v1" CACHE PATH "Nuke 17.0 install (provides libtorch 2.7.1)")
+if(NOT EXISTS "${NUKE_ROOT}/libtorch.so")
+    message(FATAL_ERROR "Nuke libtorch not found in ${NUKE_ROOT}")
+endif()
+message(STATUS "Nuke root (libtorch source): ${NUKE_ROOT}")
+
+# libtorch C++ HEADERS come from the conda env (Nuke ships .so but not headers).
+# MUST be the SAME version as Nuke's .so -> 2.7.1+cu128.
+set(TORCH_INCLUDE_ROOT
+    "$ENV{HOME}/miniconda3/envs/cutie311/lib/python3.11/site-packages/torch/include"
+    CACHE PATH "libtorch headers (conda, version-matched to Nuke's .so)")
+if(NOT EXISTS "${TORCH_INCLUDE_ROOT}/torch/script.h")
+    message(FATAL_ERROR "torch/script.h not found in ${TORCH_INCLUDE_ROOT}")
+endif()
+message(STATUS "libtorch headers: ${TORCH_INCLUDE_ROOT}")
+
+set(TORCH_INCLUDE_DIRS
+    "${TORCH_INCLUDE_ROOT}"
+    "${TORCH_INCLUDE_ROOT}/torch/csrc/api/include"
+)
+
+# the five Nuke-bundled torch libs we need
+set(TORCH_LIBS
+    "${NUKE_ROOT}/libtorch.so"
+    "${NUKE_ROOT}/libtorch_cpu.so"
+    "${NUKE_ROOT}/libtorch_cuda.so"
+    "${NUKE_ROOT}/libc10.so"
+    "${NUKE_ROOT}/libc10_cuda.so"
+)
+
+# -----------------------------------------------------------------------------
+# CUDA 12.8 (override the box default cuda-13.0 with -DCUDAToolkit_ROOT if needed)
+# -----------------------------------------------------------------------------
+if(NOT DEFINED CUDAToolkit_ROOT AND EXISTS "/usr/local/cuda-12.8")
+    set(CUDAToolkit_ROOT "/usr/local/cuda-12.8")
+endif()
+find_package(CUDAToolkit REQUIRED)
+message(STATUS "CUDA: ${CUDAToolkit_VERSION} (${CUDAToolkit_LIBRARY_DIR})")
+
+# -----------------------------------------------------------------------------
+# TensorRT 10.9 — SHARED for the smoke test (isolate from libtorch's CUDA)
+# -----------------------------------------------------------------------------
+set(TENSORRT_ROOT "/opt/TensorRT-10.9.0.34" CACHE PATH "TensorRT root")
+if(NOT EXISTS "${TENSORRT_ROOT}/include/NvInfer.h")
+    message(FATAL_ERROR "TensorRT headers not found in ${TENSORRT_ROOT}/include")
+endif()
+set(TRT_LIB_DIR "${TENSORRT_ROOT}/targets/x86_64-linux-gnu/lib")
+find_library(NVINFER_LIB NAMES nvinfer PATHS "${TRT_LIB_DIR}" "${TENSORRT_ROOT}/lib" NO_DEFAULT_PATH REQUIRED)
+message(STATUS "TensorRT: ${TENSORRT_ROOT}  (${NVINFER_LIB})")
+
+# -----------------------------------------------------------------------------
+# Target
+# -----------------------------------------------------------------------------
+add_executable(linkage_smoke linkage_smoke.cpp)
+
+target_include_directories(linkage_smoke PRIVATE
+    ${TORCH_INCLUDE_DIRS}
+    ${TENSORRT_ROOT}/include
+    ${CUDAToolkit_INCLUDE_DIRS}
+)
+
+# DECISIVE: Nuke 17's libtorch is built with the NEW ABI (nm showed 2497 cxx11
+# symbols). Mismatch here = links-but-crashes with corrupted std::string.
+target_compile_definitions(linkage_smoke PRIVATE _GLIBCXX_USE_CXX11_ABI=1)
+
+target_link_libraries(linkage_smoke PRIVATE
+    ${TORCH_LIBS}
+    ${NVINFER_LIB}
+    CUDA::cudart
+    dl rt pthread
+)
+
+# so the binary finds Nuke's libtorch .so at runtime without LD_LIBRARY_PATH
+set_target_properties(linkage_smoke PROPERTIES
+    BUILD_RPATH "${NUKE_ROOT};${TRT_LIB_DIR};${CUDAToolkit_LIBRARY_DIR}"
+)
+
+target_compile_options(linkage_smoke PRIVATE -Wall -Wextra -Wno-unused-parameter -O2)
+
+message(STATUS "")
+message(STATUS "=== cutie linkage smoke ===")
+message(STATUS "  libtorch .so : ${NUKE_ROOT} (2.7.1)")
+message(STATUS "  libtorch hdr : ${TORCH_INCLUDE_ROOT}")
+message(STATUS "  ABI          : _GLIBCXX_USE_CXX11_ABI=1")
+message(STATUS "  TensorRT     : ${TENSORRT_ROOT} (shared)")
+message(STATUS "  CUDA         : ${CUDAToolkit_VERSION}")
+message(STATUS "  run: ./linkage_smoke fusion_transformer.pt encode_image.fp16.engine")
+message(STATUS "===========================")
