@@ -13,6 +13,11 @@ It's a from-scratch port of [Cutie](https://github.com/hkchengrex/Cutie)
 Nuke 17. TensorRT is statically linked, so deployment needs only Nuke 17 and an
 NVIDIA driver — **no TensorRT install** on any studio machine.
 
+**Two backends, one codebase.** Build the **TensorRT** backend for speed (a
+self-contained ~800MB plugin), or the **pure-libtorch** backend ([`003_CPP_Libtorch`](003_CPP_Libtorch/))
+for accessibility — no TensorRT at all, builds in seconds, 232MB, runs on nothing but
+Nuke 17. Same node, same results; the libtorch one is slower but trivially buildable.
+
 > This repo is also a **complete, honest step-by-step guide** to the port — every
 > stage, the real decisions, and the dead-ends avoided. If you want to learn how to
 > get a stateful AI model running natively inside Nuke (not via the in-process Python
@@ -49,8 +54,7 @@ install.
 | **0. Environment** | [`000_CutieInstallGuide/`](000_CutieInstallGuide/) | The `cutie311` conda environment — the exact, verified Python setup (torch 2.7.1+cu128, the TensorRT tarball wheel, Cutie + deps) everything else builds on. |
 | **1. Model Prep** | [`001_PREP/`](001_PREP/) | Cutie weights → 4 TensorRT engines + 1 traced TorchScript module. Export, build, trace, validate against the Python oracle. |
 | **2. The C++ Plugin** | [`002_CPP/`](002_CPP/) | The TRT engine runner, the bit-exact C++ memory core, the stateful Nuke node (`inputAt` frame-pull, disk cache, post-process), and the static-TensorRT build. |
-
-Each folder has its own README walking through that stage. Start at `000`.
+| **3. Pure-libtorch backend** | [`003_CPP_Libtorch/`](003_CPP_Libtorch/) | The no-TensorRT alternative: trace the 4 stages to `.pt`, the `TorchEngine` drop-in runner, the backend flag. Builds in seconds, 232MB, needs only Nuke. Slower but trivially buildable.
 
 ---
 
