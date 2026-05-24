@@ -3,7 +3,7 @@
 Turning Cutie's PyTorch model into the 5 deployable assets the Nuke plugin loads:
 **4 TensorRT engines + 1 traced TorchScript module.**
 
-This is the first stage of building [CutieRoto](https://petermercell.com) — a native
+This is the first stage of building [CutieRoto](https://github.com/petermercell/CutieRoto/tree/main) — a native
 TensorRT + libtorch Nuke plugin that propagates a roto mask across a clip (roto a
 few keyframes, the tracker fills the rest). It's a port of
 [Cutie](https://github.com/hkchengrex/Cutie) (Ho Kei Cheng et al., MIT) by
