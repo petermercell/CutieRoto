@@ -190,7 +190,10 @@ validated run is the reference the C++ plugin must later match — if Python is 
 here, the port has a correct target to hit.
 
 (`memory_read_reference.py` is the fp32 spec for the memory read — used by the
-validation and, later, transcribed into the C++ memory core.)
+validation and, later, transcribed into the C++ memory core. The validation also
+needs the `trt_feature_store.py` / `trt_mask_encoder_hook.py` / `trt_decoder_hook.py`
+helpers present — they inject the engines into Cutie's network so pass B runs the
+TRT pipeline while pass A runs stock PyTorch, on the identical loop.)
 
 ---
 
@@ -223,8 +226,16 @@ These 5 files are everything the Nuke plugin needs — they get embedded into th
 | `build_mask_decoder.py`     | E5 ONNX → fp32 static engine |
 | `trace_fusion_transformer.py` | E4 → `fusion_transformer.pt` (traced) |
 | `cutie_mask_propagate.py`   | the oracle (ground-truth Cutie run) |
-| `memory_read_reference.py`  | fp32 memory-read spec |
-| `validate_pathb_insitu.py`  | full assembled-pipeline validation vs oracle |
+| `memory_read_reference.py`  | fp32 memory-read spec (transcribed into the C++ core) |
+| `trt_feature_store.py`      | injects E1/E2 engines into Cutie for validation |
+| `trt_mask_encoder_hook.py`  | injects E3 engine into Cutie for validation |
+| `trt_decoder_hook.py`       | injects E5 engine into Cutie for validation |
+| `validate_pathb_insitu.py`  | full Path-B validation vs oracle (the C++ spec) |
+
+> The `trt_*_hook.py` / `trt_feature_store.py` helpers monkey-patch Cutie's network
+> to run the TRT engines in place of its PyTorch modules — that's how the A/B
+> validation compares the engine pipeline against the pure-PyTorch oracle on the
+> exact same recurrent loop. `validate_pathb_insitu.py` imports all of them.
 
 ---
 
