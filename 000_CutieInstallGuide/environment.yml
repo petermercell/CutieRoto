@@ -1,0 +1,45 @@
+# cutie311 — conda environment for CutieRoto model prep
+#
+# Reproduce with:   conda env create -f environment.yml
+# Then (NOT covered by this file — see README.md):
+#   - install Cutie editable:  cd Cutie && pip install -e . --no-deps
+#   - install the TensorRT wheel from the TARBALL (not PyPI):
+#       pip install /opt/TensorRT-10.9.0.34/python/tensorrt-10.9.0.34-cp311-none-linux_x86_64.whl
+#   - download Cutie weights: python cutie/utils/download_models.py
+#
+# Assumes CUDA 12.8 + TensorRT 10.9 already installed system-side.
+# torch is pinned to 2.7.1+cu128 to match Nuke 17's bundled libtorch.
+
+name: cutie311
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      # torch/torchvision from PyTorch's cu128 index (match Nuke 17 = 2.7.1)
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - torch==2.7.1+cu128
+      - torchvision==0.22.1+cu128
+      # Cutie runtime deps
+      - faust-cchardet==2.1.19
+      - hydra-core==1.3.2
+      - omegaconf==2.3.0
+      - einops==0.8.2
+      - opencv-python==4.13.0.92
+      - pillow==12.2.0
+      - tqdm==4.67.3
+      - OpenEXR==3.4.11
+      - scipy==1.17.1
+      - requests==2.34.2
+      # thin-plate-spline from git, no deps
+      - "git+https://github.com/cheind/py-thin-plate-spline"
+      # ONNX export + validation
+      - onnx==1.21.0
+      - onnxruntime-gpu==1.26.0
+      # CUDA build helper used by some scripts
+      - pycuda==2026.1
+      #
+      # NOT listed here (install separately per README.md):
+      #   - cutie (editable: pip install -e . from the Cutie clone)
+      #   - tensorrt==10.9.0.34 (the tarball wheel, NOT the PyPI package)
