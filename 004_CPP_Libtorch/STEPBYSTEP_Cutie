@@ -1,0 +1,42 @@
+
+export PATH=/usr/local/cuda-12.8/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-12.8/lib64:/opt/TensorRT-10.9.0.34/lib:$LD_LIBRARY_PATH
+
+cmake -B build -DCUDAToolkit_ROOT=/usr/local/cuda-12.8 -DCUTIE_LIBTORCH_BACKEND=ON
+cmake --build build -j --target CutieRoto
+
+
+
+
+
+
+
+
+ls -la build/CutieRoto.so
+ldd build/CutieRoto.so | grep -i "nvinfer\|cudart\|torch"   # expect NO nvinfer
+
+
+# ASan — the reliable gate
+cmake -B build -DCUDAToolkit_ROOT=/usr/local/cuda-12.8 -DCUTIE_LIBTORCH_BACKEND=ON \
+      -DCUTIE_SANITIZE_RACE=ON -DCUTIE_RACE_SANITIZER=address
+cmake --build build -j --target test_cache_race test_cache_race_buggy
+./build/test_cache_race                                      # must be CLEAN (no report)
+ASAN_OPTIONS=halt_on_error=1 ./build/test_cache_race_buggy   # must REPORT heap-use-after-free
+
+# TSan variant (optional)
+cmake -B build -DCUDAToolkit_ROOT=/usr/local/cuda-12.8 -DCUTIE_LIBTORCH_BACKEND=ON \
+      -DCUTIE_SANITIZE_RACE=ON -DCUTIE_RACE_SANITIZER=thread
+cmake --build build -j --target test_cache_race test_cache_race_buggy
+./build/test_cache_race
+TSAN_OPTIONS=halt_on_error=1 ./build/test_cache_race_buggy
+
+# turn the sanitizer machinery back off (it's cached, so be explicit)
+cmake -B build -DCUDAToolkit_ROOT=/usr/local/cuda-12.8 -DCUTIE_LIBTORCH_BACKEND=ON -DCUTIE_SANITIZE_RACE=OFF                                      # drop-in dist/ folder
+
+
+cp /path/to/downloaded/test_cache_race.cpp src/tests/test_cache_race.cpp   # the 250-line deterministic version
+cmake --build build -j --target test_cache_race test_cache_race_buggy
+./build/test_cache_race                                       # FIXED: clean
+ASAN_OPTIONS=halt_on_error=1 ./build/test_cache_race_buggy    # BUGGY: must abort with heap-use-after-free in deterministicProbe
+
+
