@@ -1,0 +1,11 @@
+https://download.pytorch.org/libtorch/cu128/libtorch-win-shared-with-deps-2.7.1%2Bcu128.zip
+
+
+cd C:\Users\WORKSTATION\Downloads\cutie_nuke
+rmdir /s /q build 2>nul & mkdir build && cd build
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCUTIE_LIBTORCH_BACKEND=ON -DNUKE_VERSION=17.0v1 -DTORCH_DIR=C:/libtorch-2.7.1
+cmake --build .
+
+
+set CUTIE_DEBUG=1
+"C:\Program Files\Nuke17.0v1\Nuke17.0.exe"
