@@ -1,0 +1,49 @@
+// ============================================================================
+// embedded_assets_mac.S(.in)  —  embed the 5 traced .pt into the dylib.
+//
+// macOS has no GNU objcopy, so we use the assembler's .incbin directive (the
+// Mach-O / clang equivalent) to bake each model file into a read-only data
+// section. CMake configure_file substitutes @ASSET_DIR@ with the absolute models
+// directory. Each blob exposes _cutie_<id>_start / _cutie_<id>_end symbols; the
+// C++ side (embedded_assets.h, CUTIE_EMBED_MODELS path) computes size = end-start.
+//
+// .private_extern keeps the symbols visible across translation units WITHIN the
+// dylib but NOT exported in its symbol table (the plugin shouldn't export them).
+// 16-byte alignment is ample for streaming the bytes into torch::jit::load.
+// ============================================================================
+.section __DATA,__const
+
+.p2align 4
+.private_extern _cutie_e1_start
+_cutie_e1_start:
+.incbin "@ASSET_DIR@/encode_image.pt"
+.private_extern _cutie_e1_end
+_cutie_e1_end:
+
+.p2align 4
+.private_extern _cutie_e2_start
+_cutie_e2_start:
+.incbin "@ASSET_DIR@/transform_key.pt"
+.private_extern _cutie_e2_end
+_cutie_e2_end:
+
+.p2align 4
+.private_extern _cutie_e3_start
+_cutie_e3_start:
+.incbin "@ASSET_DIR@/mask_encoder.pt"
+.private_extern _cutie_e3_end
+_cutie_e3_end:
+
+.p2align 4
+.private_extern _cutie_e5_start
+_cutie_e5_start:
+.incbin "@ASSET_DIR@/mask_decoder.pt"
+.private_extern _cutie_e5_end
+_cutie_e5_end:
+
+.p2align 4
+.private_extern _cutie_ft_start
+_cutie_ft_start:
+.incbin "@ASSET_DIR@/fusion_transformer.pt"
+.private_extern _cutie_ft_end
+_cutie_ft_end:
